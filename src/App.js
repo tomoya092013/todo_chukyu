@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const App = () => {
   const [todoTitle, setTodoTitle] = useState("");
@@ -7,6 +7,8 @@ const App = () => {
   const [isEditable, setIsEditable] = useState(false);
   const [editId, setEditId] = useState("");
   const [newTitle, setNewTitle] = useState("");
+  const [filter, setFilter] = useState("notStarted");
+  const [filteredTodos, setFilteredTodos] = useState([]);
 
   const handleAddFormChanges = (e) => {
     setTodoTitle(e.target.value);
@@ -17,6 +19,7 @@ const App = () => {
       {
         id: todoId,
         title: todoTitle,
+        status: "notStarted",
       },
     ]);
     setTodoId(todoId + 1);
@@ -51,6 +54,42 @@ const App = () => {
     setNewTitle("");
     handleCloseEditForm();
   };
+  const handleStatusChange = (e, targetTodo) => {
+    // console.log(e);
+    // console.log(targetTodo);
+    const newArray = todos.map(
+      (todo) =>
+        todo.id === targetTodo.id ? { ...todo, status: e.target.value } : todo //この状態だとconsole.log(e);のstatusは初期値notStartedのまま
+      // todo.id === targetTodo.id ? { ...todo, status: e.target.value } : todo //これだとconsole.log(e);のstatusは変わっている　なぜ？
+    );
+    setTodos(newArray);
+  };
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+  };
+
+  useEffect(() => {
+    const filteringTodos = () => {
+      switch (filter) {
+        case "notStarted":
+          setFilteredTodos(
+            todos.filter((todo) => todo.status === "notStarted")
+          );
+          break;
+        case "inProgress":
+          setFilteredTodos(
+            todos.filter((todo) => todo.status === "inProgress")
+          );
+          break;
+        case "done":
+          setFilteredTodos(todos.filter((todo) => todo.status === "done"));
+          break;
+        default:
+          setFilteredTodos(todos);
+      }
+    };
+    filteringTodos();
+  }, [filter, todos]);
 
   return (
     <>
@@ -74,13 +113,27 @@ const App = () => {
             onChange={handleAddFormChanges}
           />
           <button onClick={handleAddTodo}>作成</button>
+          <select value={filter} onChange={handleFilterChange}>
+            <option value="all">全て</option>
+            <option value="notStarted">未着手</option>
+            <option value="inProgress">作業中</option>
+            <option value="done">完了</option>
+          </select>
         </div>
       )}
 
       <ul>
-        {todos.map((todo) => (
+        {filteredTodos.map((todo) => (
           <li key={todo.id}>
             {todo.title}
+            <select
+              value={todo.status}
+              onChange={(e) => handleStatusChange(e, todo)} //引数二つ指定するのはなぜ？
+            >
+              <option value="notStarted">未着手</option>
+              <option value="inProgress">作業中</option>
+              <option value="done">完了</option>
+            </select>
             <button onClick={() => handleOpenEditForm(todo)}>編集</button>
             <button onClick={() => handleDeleteTodo(todo)}>削除</button>
           </li>
